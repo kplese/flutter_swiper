@@ -22,7 +22,7 @@ abstract class _CustomLayoutStateBase<T extends _SubSwiper> extends State<T>
   }
 
   void _createAnimationController() {
-    _animationController = new AnimationController(vsync: this, value: 0.5);
+    _animationController = new AnimationController(animationBehavior: AnimationBehavior.preserve,vsync: this, value: 0.5,  duration: const Duration(milliseconds: 4500));
     Tween<double> tween = new Tween(begin: 0.0, end: 1.0);
     _animation = tween.animate(_animationController);
   }
@@ -80,24 +80,51 @@ abstract class _CustomLayoutStateBase<T extends _SubSwiper> extends State<T>
   Widget _buildItem(int i, int realIndex, double animationValue);
 
   Widget _buildContainer(List<Widget> list) {
+    sortList(list);
     return new Stack(
       children: list,
     );
   }
 
+  void sortList(List<Widget> list) {
+    if (list.length == 0) {
+      return;
+    }
+    
+    int length = list.length;
+    double currentMiddle = list.length/2;
+    var topMost = list[currentMiddle.toInt()];
+    var underTopFirst = list[currentMiddle.toInt()-1];
+    var underTopSecond = list[currentMiddle.toInt()+1];
+    var underTopFirstSecond = list[currentMiddle.toInt()-2];
+    var underTopSecondSecond = list[currentMiddle.toInt()+2];
+    list.remove(topMost);
+    list.remove(underTopFirst);
+    list.remove(underTopSecond);
+    list.remove(underTopFirstSecond);
+    list.remove(underTopSecondSecond);
+    list.add(underTopFirstSecond);
+    list.add(underTopSecondSecond);
+    list.add(underTopFirst);
+    list.add(underTopSecond);
+    list.add(topMost);
+  }
+
   Widget _buildAnimation(BuildContext context, Widget w) {
     List<Widget> list = [];
-
+    print("build animation");
     double animationValue = _animation.value;
 
     for (int i = 0; i < _animationCount; ++i) {
-      int realIndex = _currentIndex + i + _startIndex;
-      realIndex = realIndex % widget.itemCount;
-      if (realIndex < 0) {
-        realIndex += widget.itemCount;
-      }
+      if (widget.itemCount > 0) {
+        int realIndex = _currentIndex + i + _startIndex;
+        realIndex = realIndex % widget.itemCount;
+        if (realIndex < 0) {
+          realIndex += widget.itemCount;
+        }
 
-      list.add(_buildItem(i, realIndex, animationValue));
+        list.add(_buildItem(i, realIndex, animationValue));
+      }
     }
 
     return new GestureDetector(
